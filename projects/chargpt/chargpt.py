@@ -51,6 +51,9 @@ class CharDataset(Dataset):
         return C
 
     def __init__(self, config, data):
+        # REMOVE
+        data = str(list(data)[0:(len(data) // 10)])
+
         self.config = config
 
         chars = sorted(list(set(data)))
