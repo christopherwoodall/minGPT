@@ -12,6 +12,7 @@ from mingpt.utils import set_seed, setup_logging, CfgNode as CN
 
 
 def get_config():
+
     C = CN()
 
     # system
@@ -47,6 +48,7 @@ class CharDataset(Dataset):
         return C
 
     def __init__(self, config, data):
+
         self.config = config
 
         chars = sorted(list(set(data)))
@@ -55,6 +57,7 @@ class CharDataset(Dataset):
 
         self.stoi = {ch: i for i, ch in enumerate(chars)}
         self.itos = {i: ch for i, ch in enumerate(chars)}
+        # print([repr(c) for c in chars])
 
         self.vocab_size = vocab_size
         self.data = data
@@ -69,8 +72,11 @@ class CharDataset(Dataset):
         return len(self.data) - self.config.block_size
 
     def __getitem__(self, idx):
+        # grab a chunk of (block_size + 1) characters from the data
         chunk = self.data[idx : idx + self.config.block_size + 1]
+        # encode every character to an integer
         dix = [self.stoi[s] for s in chunk]
+        # return as tensors
         x = torch.tensor(dix[:-1], dtype=torch.long)
         y = torch.tensor(dix[1:], dtype=torch.long)
         return x, y
@@ -89,7 +95,7 @@ def parse_args():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="out/model.pt",
+        default="./out/chargpt/model.pt",
         help="Path to model checkpoint file (default: out/model.pt)",
     )
 
@@ -100,26 +106,43 @@ def parse_args():
         help="Path to input text file for training dataset",
     )
 
+    parser.add_argument(
+        "--device",
+        type=str,
+        default="cuda" if torch.cuda.is_available() else "cpu",
+        help="Device to run the model on (default: cuda if available, else cpu)",
+    )
+
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     args = parse_args()
 
+    # get default config and overrides from the command line, if any
     config = get_config()
-    config.merge_from_args(sys.argv[1:])
+    # config.merge_from_args(sys.argv[1:])
     print(config)
     setup_logging(config)
     set_seed(config.system.seed)
 
-    # Load training text
-    text = open(args.input_file, "r").read()
+    # Set the device
+    device = args.device
+    # device = torch.device(args.device)
+
+    # Set the context for generation
+    context = args.prompt
+
+    # construct the training dataset
+    input_file = args.input_file if args.input_file else "input.txt"
+    text = open(input_file, "r").read()
     train_dataset = CharDataset(config.data, text)
 
-    # Setup model config
+    # construct the model
     config.model.vocab_size = train_dataset.get_vocab_size()
     config.model.block_size = train_dataset.get_block_size()
 
+    # Load the model
     model = GPT(config.model)
 
     # Determine checkpoint path
@@ -131,19 +154,17 @@ if __name__ == "__main__":
     if os.path.exists(ckpt_path):
         print(f"loading model from {ckpt_path}")
         state_dict = torch.load(ckpt_path)
+        # Load the state dictionary into the model
         model.load_state_dict(state_dict)
 
-    if torch.cuda.is_available():
+    if device == "cuda" and torch.cuda.is_available():
         model.to("cuda")
         print("Model moved to GPU.")
 
     model.eval()
 
     with torch.no_grad():
-        context = args.prompt
-
-        # Convert the context string to a tensor of token indices
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        # Convert the context string to a tensor of token indices - on the same device as the model
         x = torch.tensor([train_dataset.stoi[s] for s in context], dtype=torch.long)[
             None, ...
         ].to(device)
@@ -152,7 +173,9 @@ if __name__ == "__main__":
         y = model.generate(x, 500, temperature=1.0, do_sample=True, top_k=10)[0]
 
         # Convert the generated token indices back to a string
-        characters = [train_dataset.itos[int(i)] for i in y]
+        characters = [train_dataset.itos[int(i)].strip("'\"") for i in y]
+
         completion = "".join(characters)
 
+        # Print the completed text
         print(completion)
