@@ -23,7 +23,7 @@ def get_config():
     # system
     C.system = CN()
     C.system.seed = 3407
-    C.system.work_dir = "./out/chargpt"
+    C.system.work_dir = "./out/twitter"
 
     # data
     C.data = CharDataset.get_default_config()
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     set_seed(config.system.seed)
 
     # construct the training dataset
-    text = open("input.txt", "r").read()  # don't worry we won't run out of file handles
+    text = open("output.txt", "r").read()  # don't worry we won't run out of file handles
     train_dataset = CharDataset(config.data, text)
 
     # construct the model
