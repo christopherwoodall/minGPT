@@ -3,6 +3,7 @@ import json
 
 from pathlib import Path
 
+
 def parse_args():
     parser = argparse.ArgumentParser(description="Run char-level GPT generation")
 
@@ -26,9 +27,8 @@ def parse_args():
 def main():
     args = parse_args()
 
-
     prefix = "window.YTD.tweets.part0 = "
-    _tweet_data = Path(args.tweets).read_text()[len(prefix):]
+    _tweet_data = Path(args.tweets).read_text()[len(prefix) :]
     tweet_data = json.loads(_tweet_data)
 
     output_path = Path(args.output)
