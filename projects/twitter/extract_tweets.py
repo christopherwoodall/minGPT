@@ -17,7 +17,7 @@ def parse_args():
     parser.add_argument(
         "--output",
         type=Path,
-        default="output.txt",
+        default="input.txt",
         help="Path to output text file for generated tweets",
     )
 
