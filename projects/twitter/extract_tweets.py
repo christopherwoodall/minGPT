@@ -40,7 +40,15 @@ def main():
 
         full_text = tweet.get("full_text", "")
 
-        results.append(full_text)
+        if full_text.startswith("RT @"):
+            username, content = full_text[4:].split(":", 1)
+            results.append(f"@{username}:\n{content.strip()}\n\n")
+        elif full_text.startswith("@"):
+            username, content = full_text[1:].split(" ", 1)
+            full_text = f"{content.strip()}\n\n"
+        else:
+            full_text = full_text.strip()
+            results.append(f"{full_text}\n\n")
 
     output_path.write_text("\n".join(results))
 
