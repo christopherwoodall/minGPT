@@ -53,7 +53,7 @@ class CharDataset(Dataset):
 
         chars = sorted(list(set(data)))
         data_size, vocab_size = len(data), len(chars)
-        print("data has %d characters, %d unique." % (data_size, vocab_size))
+        # print("data has %d characters, %d unique." % (data_size, vocab_size))
 
         self.stoi = {ch: i for i, ch in enumerate(chars)}
         self.itos = {i: ch for i, ch in enumerate(chars)}
@@ -122,7 +122,7 @@ def main():
     # get default config and overrides from the command line, if any
     config = get_config()
     # config.merge_from_args(sys.argv[1:])
-    print(config)
+    # print(config)
     setup_logging(config)
     set_seed(config.system.seed)
 
@@ -152,14 +152,14 @@ def main():
         else os.path.join(config.system.work_dir, "model.pt")
     )
     if os.path.exists(ckpt_path):
-        print(f"loading model from {ckpt_path}")
+        # print(f"loading model from {ckpt_path}")
         state_dict = torch.load(ckpt_path)
         # Load the state dictionary into the model
         model.load_state_dict(state_dict)
 
     if device == "cuda" and torch.cuda.is_available():
         model.to("cuda")
-        print("Model moved to GPU.")
+        # print("Model moved to GPU.")
 
     model.eval()
 
