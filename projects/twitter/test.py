@@ -18,7 +18,7 @@ def get_config():
     # system
     C.system = CN()
     C.system.seed = 3407
-    C.system.work_dir = "./out/chargpt"
+    C.system.work_dir = "./out/twitter"
 
     # data
     C.data = CharDataset.get_default_config()
@@ -95,7 +95,7 @@ def parse_args():
     parser.add_argument(
         "--checkpoint",
         type=str,
-        default="./out/chargpt/model.pt",
+        default="./out/twitter/model.pt",
         help="Path to model checkpoint file (default: out/model.pt)",
     )
 
